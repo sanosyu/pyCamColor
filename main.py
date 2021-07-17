@@ -27,6 +27,29 @@ def draw_plot(img_f):
     # 表示が安定しない場合は時間をかえてみる
     plt.pause(0.01)
 
+
+def draw_heatmap(img_f):
+    
+    plt.clf()
+    
+    # Convert BGR to HSV
+    hsv = cv2.cvtColor(img_f, cv2.COLOR_BGR2HSV)
+
+    # define range of blue color in HSV
+    lower_blue = np.array([110,50,50])
+    upper_blue = np.array([130,255,255])
+
+    # Threshold the HSV image to get only blue colors
+    mask = cv2.inRange(hsv, lower_blue, upper_blue)
+
+    # Bitwise-AND mask and original image
+    res = cv2.bitwise_and(img_f, img_f, mask= mask)
+
+    plt.imshow(res)
+
+    plt.pause(0.01)
+
+
 ### PySimpleGUIでGUIを作成するための準備 ###
 # ラジオボタン、スライダー設定
 s_button_0 = sg.Radio('None', 'Radio', True, size=(10, 1))
@@ -42,6 +65,7 @@ s_button_9 = sg.Slider((0, 225), 0, 1, orientation='h', size=(47, 15), key='-HUE
 s_button_10 = sg.Radio('Enhance', 'Radio', size=(10, 1), key='-ENHANCE-')
 s_button_11 = sg.Slider((1, 255), 128, 1, orientation='h', size=(47, 15), key='-ENHANCE SLIDER-')
 s_button_12 = sg.Radio('Histgram', 'Radio', size=(10, 1), key='-hist-')
+s_button_17 = sg.Radio('HSV', 'Radio', size=(10, 1), key='-HSV-')
 
 # 押しボタン設定
 s_button_13 = sg.Submit('Capture of convert image', size=(20, 10))
@@ -69,7 +93,8 @@ frame2 = sg.Frame(layout=[[s_button_0],
                           [s_button_6, s_button_7],
                           [s_button_8, s_button_9],
                           [s_button_10, s_button_11],
-                          [s_button_12]],
+                          [s_button_12],
+                          [s_button_17]],
                         title='parameter',
                         title_color='white',
                         font=('メイリオ', 12),
@@ -110,7 +135,7 @@ layout = [
 ### 画面表示の設定 ###
 window = sg.Window('Viewer', 
                     layout,
-                    size=(1200,700),
+                    size=(1200,800),
                     location=(10, 10),
                     alpha_channel=1.0,
                     no_titlebar=False,
@@ -181,9 +206,17 @@ while True:
         lab[:, :, 0] = clahe.apply(lab[:, :, 0])
         img_1 = cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
 
+    elif values['-HSV-']:
+        img_1 = cv2.cvtColor(img_1, cv2.COLOR_BGR2HSV)
+        lower_blue = np.array([50,50,50])
+        upper_blue = np.array([180,255,255])
+        mask = cv2.inRange(img_1, lower_blue, upper_blue)
+        img_1 = cv2.bitwise_and(img_1, img_1, mask= mask)
+
     if values['-hist-']:
         # ヒストグラムは別画面で表示
-        canvas.create_image(300, 300, image=draw_plot(img_1))
+        # canvas.create_image(300, 300, image=draw_plot(img_1))
+        canvas.create_image(300, 300, image=draw_heatmap(img_1))
 
     ### 各種画像保存 ###
     # 日付の取得(ファイル名に使用する準備)
