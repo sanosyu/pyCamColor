@@ -28,28 +28,6 @@ def draw_plot(img_f):
     plt.pause(0.01)
 
 
-def draw_heatmap(img_f):
-    
-    plt.clf()
-    
-    # Convert BGR to HSV
-    hsv = cv2.cvtColor(img_f, cv2.COLOR_BGR2HSV)
-
-    # define range of blue color in HSV
-    lower_blue = np.array([110,50,50])
-    upper_blue = np.array([130,255,255])
-
-    # Threshold the HSV image to get only blue colors
-    mask = cv2.inRange(hsv, lower_blue, upper_blue)
-
-    # Bitwise-AND mask and original image
-    res = cv2.bitwise_and(img_f, img_f, mask= mask)
-
-    plt.imshow(res)
-
-    plt.pause(0.01)
-
-
 ### PySimpleGUIでGUIを作成するための準備 ###
 # ラジオボタン、スライダー設定
 s_button_0 = sg.Radio('None', 'Radio', True, size=(10, 1))
@@ -71,10 +49,10 @@ s_button_17 = sg.Radio('HSV', 'Radio', size=(10, 1), key='-HSV-')
 s_button_13 = sg.Submit('Capture of convert image', size=(20, 10))
 s_button_14 = sg.Submit('Capture of original image', size=(20, 10))
 s_button_15 = sg.Submit('Capture of histgram', size=(20, 10))
-s_button_16 = sg.Submit('Quit', size=(20, 10), button_color=('black', '#4adcd6'))
+s_button_16 = sg.Submit('QUIT', size=(20, 10), button_color=('black', '#4adcd6'))
 
 # 映像定義
-frame3 = sg.Image(filename='', key='-IMAGE-')    # 変換後の映像
+# frame3 = sg.Image(filename='', key='-IMAGE-')    # 変換後の映像
 frame4 = sg.Image(filename='', key='-IMAGE_2-')  # オリジナル映像
 frame5 = sg.Canvas(size=(1, 1), key='canvas')    # ヒストグラムを別画面で表示させるのに必要
 
@@ -111,11 +89,11 @@ layout_1 = sg.Frame(layout=[[frame1],
                           relief=sg.RELIEF_SUNKEN)
 
 # 変換後の映像の画面設定 
-layout_2 = sg.Frame(layout=[[frame3]],
-                          title='',
-                          title_color='white',
-                          font=('メイリオ', 10),
-                          relief=sg.RELIEF_SUNKEN)
+# layout_2 = sg.Frame(layout=[[frame3]],
+#                           title='',
+#                           title_color='white',
+#                           font=('メイリオ', 10),
+#                           relief=sg.RELIEF_SUNKEN)
 
 # 押しボタンのレイアウト設定
 layout_3 = sg.Frame(layout=[[s_button_13],
@@ -128,14 +106,18 @@ layout_3 = sg.Frame(layout=[[s_button_13],
                           relief=sg.RELIEF_SUNKEN)
 
 ### レイアウトまとめ ###
+# layout = [
+#           [layout_2, layout_1, layout_3],
+#          ]
+
 layout = [
-          [layout_2, layout_1, layout_3],
+          [layout_1, layout_3],
          ]
 
 ### 画面表示の設定 ###
 window = sg.Window('Viewer', 
                     layout,
-                    size=(1200,800),
+                    size=(800,800),
                     location=(10, 10),
                     alpha_channel=1.0,
                     no_titlebar=False,
@@ -169,7 +151,7 @@ while True:
 
     event, values = window.read(timeout=20)
 
-    if event == 'Quit' or event == sg.WIN_CLOSED:
+    if event == 'QUIT' or event == sg.WIN_CLOSED:
         break
 
     _, img = cap.read()
@@ -215,8 +197,7 @@ while True:
 
     if values['-hist-']:
         # ヒストグラムは別画面で表示
-        # canvas.create_image(300, 300, image=draw_plot(img_1))
-        canvas.create_image(300, 300, image=draw_heatmap(img_1))
+        canvas.create_image(300, 300, image=draw_plot(img_1))
 
     ### 各種画像保存 ###
     # 日付の取得(ファイル名に使用する準備)
@@ -225,7 +206,7 @@ while True:
 
     # ヒストグラム画像
     if event == 'Capture of histgram':
-        plt.savefig('./cnn_act/capture/' +
+        plt.savefig('./' +
                        str(d_today) + str("_") +
                        str(dt_now.hour) + str("_") +
                        str(dt_now.minute) + str("_") +
@@ -233,7 +214,7 @@ while True:
         
     # 変換後の画像
     if event == 'Capture of convert image':   
-        cv2.imwrite('./cnn_act/capture/' +
+        cv2.imwrite('./' +
                        str(d_today) + str("_") +
                        str(dt_now.hour) + str("_") +
                        str(dt_now.minute) + str("_") +
@@ -241,7 +222,7 @@ while True:
 
     # オリジナル画像
     if event == 'Capture of original image':
-        cv2.imwrite('./cnn_act/capture/' +
+        cv2.imwrite('./' +
                        str(d_today) + str("_") +
                        str(dt_now.hour) + str("_") +
                        str(dt_now.minute) + str("_") +
@@ -255,10 +236,10 @@ while True:
     frame_1 = cv2.putText(img_1, fps, (10, 30), cv2.FONT_HERSHEY_PLAIN, 2, (0, 255, 255), 2, cv2.LINE_AA)
 
     ### 画面更新 ###
-    imgbytes = cv2.imencode('.png', img_1)[1].tobytes()
-    window['-IMAGE-'].update(data=imgbytes)
+    # imgbytes = cv2.imencode('.png', img_1)[1].tobytes()
+    # window['-IMAGE-'].update(data=imgbytes)
 
-    imgbytes_2 = cv2.imencode('.png', img_3)[1].tobytes()
+    imgbytes_2 = cv2.imencode('.png', img_1)[1].tobytes()
     window['-IMAGE_2-'].update(data=imgbytes_2)
 
 window.close()
