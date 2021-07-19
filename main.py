@@ -58,9 +58,10 @@ radio_hsv_v = sg.Radio('Value', 'radio_hsv', size=(10,1), key='-HSV PLOT V-', fo
 radio_hist = sg.Radio('Histgram', 'Radio', size=(10, 1), key='-hist-', font=(myFont, 12))
 
 ## btn
-btn_cap_img = sg.Submit('Capture Image', size=(20, 10), font=(myFont, 12))
-btn_cap_hist = sg.Submit('Capture Histgram', size=(20, 10), font=(myFont, 12))
-btn_quit = sg.Submit('QUIT', size=(20, 10), button_color=('black', '#4adcd6'), font=(myFont, 12))
+btn_cap_img = sg.Submit('Capture Image', size=(20,10), font=(myFont, 12))
+btn_cap_hsv = sg.Submit('Capture HSV', size=(20,10), font=(myFont, 12))
+btn_cap_hist = sg.Submit('Capture Histgram', size=(20,10), font=(myFont, 12))
+btn_quit = sg.Submit('QUIT', size=(20,10), button_color=('black', '#4adcd6'), font=(myFont, 12))
 
 ## image
 frame4 = sg.Image(filename='', key='-IMAGE-')
@@ -101,6 +102,7 @@ layout_1 = sg.Frame(layout=[[frame_image],
 
 layout_2 = sg.Column(layout=[[btn_cap_img],
                              [btn_cap_hist],
+                             [btn_cap_hsv],
                              [btn_quit]],
                      vertical_alignment='top')
 
@@ -195,7 +197,7 @@ while True:
 
     # histgram
     if event == 'Capture Histgram':
-        plt.savefig('./' +
+        plt.savefig('./hist_' +
                        str(d_today) + str("_") +
                        str(dt_now.hour) + str("_") +
                        str(dt_now.minute) + str("_") +
@@ -208,6 +210,14 @@ while True:
                        str(dt_now.hour) + str("_") +
                        str(dt_now.minute) + str("_") +
                        str(dt_now.second) + '.jpg', img_1)
+
+    if event == 'Capture HSV':
+        plt.savefig('./hsv_' +
+                        str(d_today) + str("_") +
+                        str(dt_now.hour) + str("_") +
+                        str(dt_now.minute) + str("_") +
+                        str(dt_now.second) + '.png')
+
 
     ### calc FPS  ###
     elapsedTime = time.perf_counter() - t1
