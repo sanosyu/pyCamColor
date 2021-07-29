@@ -19,11 +19,11 @@ def draw_plot(img_f):
     plt.pause(0.01) # refresh rate
 
 
-def draw_heatmap_hsv(img_f, channel):
+def draw_heatmap(img, channel):
     plt.clf()
-    z = img_f[:,:,channel]
-    z.reshape(img_f.shape[0], img_f.shape[1])
-    plt.imshow(z, cmap=cm.jet)
+    z = img[:,:,channel]
+    z.reshape(img.shape[0], img.shape[1])
+    plt.imshow(z, cmap=cm.jet, vmin=0, vmax=255)
     plt.colorbar()
     plt.xlabel('X')
     plt.ylabel('Y')
@@ -39,8 +39,8 @@ sg.theme('Dark Grey 13')
 ## radio, slider, text
 myFont = 'Ricty Diminished Discord Regular'
 
-radio_none = sg.Radio('None', 'Radio', True, size=(10, 1), font=(myFont, 12))
-radio_filter = sg.Radio('Filter', 'Radio', size=(10, 1), key='-HSV FILTER-', font=(myFont, 12))
+radio_none = sg.Radio('None', 'Radio', True, size=(10, 1), font=(myFont, 12), key='-NONE-')
+radio_filter = sg.Radio('Filter', 'Radio', size=(10, 1), key='-FILTER-', font=(myFont, 12))
 txt_B = sg.Text('Blue', size=(10,1), font=(myFont, 12))
 sli_Bmin = sg.Slider((0,255), 50, 1, orientation='h', size=(25,15), key='-BGR B MIN-')
 sli_Bmax = sg.Slider((0,255), 255, 1, orientation='h', size=(25,15), key='-BGR B MAX-')
@@ -50,17 +50,25 @@ sli_Gmax = sg.Slider((0,255), 255, 1, orientation='h', size=(25,15), key='-BGR G
 txt_R = sg.Text('Red', size=(10,1), font=(myFont, 12))
 sli_Rmin = sg.Slider((0,255), 140, 1, orientation='h', size=(25,15), key='-BGR R MIN-')
 sli_Rmax = sg.Slider((0,255), 255, 1, orientation='h', size=(25,15), key='-BGR R MAX-')
+
 radio_hsv = sg.Radio('HSV', 'Radio', size=(10,1), key='-HSV PLOT-', font=(myFont, 12))
 txt_hsv_plot = sg.Text('', size=(10,1))
 radio_hsv_h = sg.Radio('Hue', 'radio_hsv', size=(10,1), key='-HSV PLOT H-', font=(myFont, 12))
 radio_hsv_s = sg.Radio('Saturation', 'radio_hsv', True, size=(10,1), key='-HSV PLOT S-', font=(myFont, 12))
 radio_hsv_v = sg.Radio('Value', 'radio_hsv', size=(10,1), key='-HSV PLOT V-', font=(myFont, 12)) 
+
+radio_rgb = sg.Radio('RGB', 'Radio', size=(10,1), key='-RGB PLOT-', font=(myFont, 12))
+txt_rgb_plot = sg.Text('', size=(10,1))
+radio_rgb_r = sg.Radio('Red', 'radio_rgb', size=(10,1), key='-RGB PLOT R-', font=(myFont, 12))
+radio_rgb_g = sg.Radio('Green', 'radio_rgb', True, size=(10,1), key='-RGB PLOT G-', font=(myFont, 12))
+radio_rgb_b = sg.Radio('Blue', 'radio_rgb', size=(10,1), key='-RGB PLOT B-', font=(myFont, 12)) 
+
 radio_hist = sg.Radio('Histgram', 'Radio', size=(10, 1), key='-hist-', font=(myFont, 12))
 
 ## btn
-btn_cap_img = sg.Submit('Capture Image', size=(20,10), font=(myFont, 12))
-btn_cap_hsv = sg.Submit('Capture HSV', size=(20,10), font=(myFont, 12))
-btn_cap_hist = sg.Submit('Capture Histgram', size=(20,10), font=(myFont, 12))
+btn_cap_img = sg.Submit('Image', size=(20,10), font=(myFont, 12))
+btn_cap_hsv = sg.Submit('HSV', size=(20,10), font=(myFont, 12))
+btn_cap_hist = sg.Submit('Histgram', size=(20,10), font=(myFont, 12))
 btn_quit = sg.Submit('QUIT', size=(20,10), button_color=('black', '#4adcd6'), font=(myFont, 12))
 
 ## image
@@ -83,6 +91,8 @@ frame_settings = sg.Frame(layout=[
                             [txt_R, sli_Rmin, sli_Rmax],
                             [radio_hsv],
                             [txt_hsv_plot, radio_hsv_h, radio_hsv_s, radio_hsv_v],
+                            [radio_rgb],
+                            [txt_rgb_plot, radio_rgb_r, radio_rgb_g, radio_rgb_b],
                             [radio_hist]
                             ],
                         title='Parameter',
@@ -114,7 +124,7 @@ layout = [
 ### window settigns ###
 window = sg.Window('Viewer', 
                     layout,
-                    size=(900,900),
+                    size=(900,750),
                     location=(10, 10),
                     alpha_channel=1.0,
                     no_titlebar=False,
@@ -131,8 +141,8 @@ W = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
 H = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
 #print(W, H)
 
-cap.set(3, 640)
-cap.set(4, 480)
+# cap.set(3, 640)
+# cap.set(4, 480)
 #cap.set(5, 30)
 cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
 
@@ -151,12 +161,12 @@ while True:
 
     _, img = cap.read()
 
-    img_1 = cv2.resize(img, (640,480))
+    img_1 = cv2.resize(img, (int(W/2),int(H/2)))
     img_2 = img_1
 
         
     ### processed image  ###
-    if values['-HSV FILTER-'] or values['-HSV PLOT-']:
+    if values['-FILTER-'] or values['-HSV PLOT-'] or values['-RGB PLOT-']:
         
         bmin = int(values['-BGR B MIN-'])
         bmax = int(values['-BGR B MAX-'])
@@ -180,11 +190,19 @@ while True:
         if values['-HSV PLOT-']:
             masked_img_hsv = cv2.cvtColor(masked_img, cv2.COLOR_BGR2HSV)
             if values['-HSV PLOT H-']:
-                canvas.create_image(300, 300, draw_heatmap_hsv(masked_img_hsv, 0))
+                canvas.create_image(300, 300, draw_heatmap(masked_img_hsv, 0))
             elif values['-HSV PLOT S-']:
-                canvas.create_image(300, 300, draw_heatmap_hsv(masked_img_hsv, 1))
+                canvas.create_image(300, 300, draw_heatmap(masked_img_hsv, 1))
             elif values['-HSV PLOT V-']:
-                canvas.create_image(300, 300, draw_heatmap_hsv(masked_img_hsv, 2))           
+                canvas.create_image(300, 300, draw_heatmap(masked_img_hsv, 2))
+
+        if values['-RGB PLOT-']:
+            if values['-RGB PLOT B-']:
+                canvas.create_image(300, 300, draw_heatmap(masked_img, 0))
+            elif values['-RGB PLOT G-']:
+                canvas.create_image(300, 300, draw_heatmap(masked_img, 1))
+            elif values['-RGB PLOT R-']:
+                canvas.create_image(300, 300, draw_heatmap(masked_img, 2))
 
 
     if values['-hist-']:
@@ -227,7 +245,8 @@ while True:
     frame_1 = cv2.putText(img_1, fps, (10, 30), cv2.FONT_HERSHEY_PLAIN, 2, (0, 255, 255), 2, cv2.LINE_AA)
 
     ### refresh image  ###
-    imgbytes = cv2.imencode('.png', img_1)[1].tobytes()
-    window['-IMAGE-'].update(data=imgbytes)
+    if values['-NONE-'] or values['-FILTER-']:
+        imgbytes = cv2.imencode('.png', img_1)[1].tobytes()
+        window['-IMAGE-'].update(data=imgbytes)
 
 window.close()
