@@ -39,26 +39,29 @@ sg.theme('Dark Grey 13')
 ## radio, slider, text
 myFont = 'Ricty Diminished Discord Regular'
 
+txt_size = sg.Text('Image Size', size=(10,1), font=(myFont, 12))
+radio_size1 = sg.Radio('x 1/4', 'Radio_size', size=(10,1), font=(myFont, 12), key='-SIZE 1-')
+radio_size2 = sg.Radio('x 1/2', 'Radio_size', size=(10,1), font=(myFont, 12), key='-SIZE 2-')
+radio_size3 = sg.Radio('x 1', 'Radio_size', True, size=(10,1), font=(myFont, 12), key='-SIZE 3-')
+
 radio_none = sg.Radio('None', 'Radio', True, size=(10, 1), font=(myFont, 12), key='-NONE-')
 radio_filter = sg.Radio('Filter', 'Radio', size=(10, 1), key='-FILTER-', font=(myFont, 12))
 txt_B = sg.Text('Blue', size=(10,1), font=(myFont, 12))
-sli_Bmin = sg.Slider((0,255), 50, 1, orientation='h', size=(25,15), key='-BGR B MIN-')
+sli_Bmin = sg.Slider((0,255), 0, 1, orientation='h', size=(25,15), key='-BGR B MIN-')
 sli_Bmax = sg.Slider((0,255), 255, 1, orientation='h', size=(25,15), key='-BGR B MAX-')
 txt_G = sg.Text('Green', size=(10,1), font=(myFont, 12))
-sli_Gmin = sg.Slider((0,255), 50, 1, orientation='h', size=(25,15), key='-BGR G MIN-')
+sli_Gmin = sg.Slider((0,255), 0, 1, orientation='h', size=(25,15), key='-BGR G MIN-')
 sli_Gmax = sg.Slider((0,255), 255, 1, orientation='h', size=(25,15), key='-BGR G MAX-')
 txt_R = sg.Text('Red', size=(10,1), font=(myFont, 12))
-sli_Rmin = sg.Slider((0,255), 140, 1, orientation='h', size=(25,15), key='-BGR R MIN-')
+sli_Rmin = sg.Slider((0,255), 0, 1, orientation='h', size=(25,15), key='-BGR R MIN-')
 sli_Rmax = sg.Slider((0,255), 255, 1, orientation='h', size=(25,15), key='-BGR R MAX-')
 
 radio_hsv = sg.Radio('HSV', 'Radio', size=(10,1), key='-HSV PLOT-', font=(myFont, 12))
-txt_hsv_plot = sg.Text('', size=(10,1))
 radio_hsv_h = sg.Radio('Hue', 'radio_hsv', size=(10,1), key='-HSV PLOT H-', font=(myFont, 12))
 radio_hsv_s = sg.Radio('Saturation', 'radio_hsv', True, size=(10,1), key='-HSV PLOT S-', font=(myFont, 12))
 radio_hsv_v = sg.Radio('Value', 'radio_hsv', size=(10,1), key='-HSV PLOT V-', font=(myFont, 12)) 
 
 radio_rgb = sg.Radio('RGB', 'Radio', size=(10,1), key='-RGB PLOT-', font=(myFont, 12))
-txt_rgb_plot = sg.Text('', size=(10,1))
 radio_rgb_r = sg.Radio('Red', 'radio_rgb', size=(10,1), key='-RGB PLOT R-', font=(myFont, 12))
 radio_rgb_g = sg.Radio('Green', 'radio_rgb', True, size=(10,1), key='-RGB PLOT G-', font=(myFont, 12))
 radio_rgb_b = sg.Radio('Blue', 'radio_rgb', size=(10,1), key='-RGB PLOT B-', font=(myFont, 12)) 
@@ -76,7 +79,10 @@ frame4 = sg.Image(filename='', key='-IMAGE-')
 canvas_rgb = sg.Canvas(size=(1, 1), key='canvas')
 
 ## ui group
-frame_image = sg.Frame(layout=[[frame4]],
+frame_image = sg.Frame(layout=[
+                        [frame4],
+                        [txt_size, radio_size1, radio_size2, radio_size3]
+                        ],
                         title='Image',
                         title_color='white',
                         font=('Ricty Diminished Discord Regular', 12),
@@ -89,10 +95,8 @@ frame_settings = sg.Frame(layout=[
                             [txt_B, sli_Bmin, sli_Bmax],
                             [txt_G, sli_Gmin, sli_Gmax],
                             [txt_R, sli_Rmin, sli_Rmax],
-                            [radio_hsv],
-                            [txt_hsv_plot, radio_hsv_h, radio_hsv_s, radio_hsv_v],
-                            [radio_rgb],
-                            [txt_rgb_plot, radio_rgb_r, radio_rgb_g, radio_rgb_b],
+                            [radio_hsv, radio_hsv_h, radio_hsv_s, radio_hsv_v],
+                            [radio_rgb, radio_rgb_r, radio_rgb_g, radio_rgb_b],
                             [radio_hist]
                             ],
                         title='Parameter',
@@ -124,7 +128,7 @@ layout = [
 ### window settigns ###
 window = sg.Window('Viewer', 
                     layout,
-                    size=(900,750),
+                    # size=(900,750),
                     location=(10, 10),
                     alpha_channel=1.0,
                     no_titlebar=False,
@@ -139,7 +143,7 @@ cap = cv2.VideoCapture(0)
 
 W = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
 H = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
-#print(W, H)
+# print(W, H)
 
 # cap.set(3, 640)
 # cap.set(4, 480)
@@ -161,9 +165,12 @@ while True:
 
     _, img = cap.read()
 
-    img_1 = cv2.resize(img, (int(W/2),int(H/2)))
-    img_2 = img_1
-
+    if values['-SIZE 1-']:
+        img_1 = cv2.resize(img, (int(W/4),int(H/4)))
+    elif values['-SIZE 2-']:
+        img_1 = cv2.resize(img, (int(W/2),int(H/2)))
+    elif values['-SIZE 3-']:
+        img_1 = cv2.resize(img, (int(W),int(H)))
         
     ### processed image  ###
     if values['-FILTER-'] or values['-HSV PLOT-'] or values['-RGB PLOT-']:
@@ -245,8 +252,8 @@ while True:
     frame_1 = cv2.putText(img_1, fps, (10, 30), cv2.FONT_HERSHEY_PLAIN, 2, (0, 255, 255), 2, cv2.LINE_AA)
 
     ### refresh image  ###
-    if values['-NONE-'] or values['-FILTER-']:
-        imgbytes = cv2.imencode('.png', img_1)[1].tobytes()
-        window['-IMAGE-'].update(data=imgbytes)
+    # if values['-NONE-'] or values['-FILTER-']:
+    imgbytes = cv2.imencode('.png', img_1)[1].tobytes()
+    window['-IMAGE-'].update(data=imgbytes)
 
 window.close()
